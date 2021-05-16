@@ -2,6 +2,7 @@ require('dotenv').config()
 const ethers = require('ethers')
 
 const MarketplaceContractInfo = require('../constants/salescontractabi')
+const SimplifiedERC721ABI = require('../constants/fnif')
 let rpcapi = process.env.MAINNET_RPC
 
 let provider = new ethers.providers.JsonRpcProvider(rpcapi, 250)

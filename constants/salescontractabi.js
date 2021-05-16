@@ -1,5 +1,5 @@
 const MarketplaceContractInfo = {
-  address: '0x323bc9E0e5b9454E82880D860BAd7B78553Bbd0B',
+  address: '0x88155a285d12d63EeaFc4F3f4E5b0521cD76b17A',
   abi: [
     {
       inputs: [
