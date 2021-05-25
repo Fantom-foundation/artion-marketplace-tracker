@@ -63,6 +63,7 @@ const trackMarketPlace = () => {
           })
           if (token) {
             token.price = parseFloat(pricePerItem)
+            token.listedAt = new Date() // set listed date
             await token.save()
           }
         } else if (type == 1155) {
@@ -72,6 +73,7 @@ const trackMarketPlace = () => {
           })
           if (token) {
             token.price = parseFloat(pricePerItem)
+            token.listedAt = new Date() // set listed date
             await token.save()
           }
         }
@@ -119,6 +121,8 @@ const trackMarketPlace = () => {
         })
         if (token) {
           token.lastSalePrice = parseFloat(price)
+          token.soldAt = new Date() //set recently sold date
+          token.listedAt = new Date(1970, 1, 1) //remove listed date
           await token.save()
         }
       } else if (type == 1155) {
@@ -128,6 +132,8 @@ const trackMarketPlace = () => {
         })
         if (token) {
           token.lastSalePrice = parseFloat(price)
+          token.soldAt = new Date() //set recently sold date
+          token.listedAt = new Date(1970, 1, 1) //remove listed date
           await token.save()
         }
       }
@@ -194,6 +200,31 @@ const trackMarketPlace = () => {
     console.log(owner, nft, tokenID)
     owner = toLowerCase(owner)
     nft = toLowerCase(nft)
+
+    let category = await Category.findOne({ minterAddress: nft })
+    if (category) {
+      let type = parseInt(category.type)
+      if (type == 721) {
+        let token = await ERC721TOKEN.findOne({
+          contractAddress: nft,
+          tokenID: tokenID,
+        })
+        if (token) {
+          token.listedAt = new Date(1970, 1, 1) //remove listed date
+          await token.save()
+        }
+      } else if (type == 1155) {
+        let token = await ERC1155TOKEN.findOne({
+          contractAddress: nft,
+          tokenID: tokenID,
+        })
+        if (token) {
+          token.listedAt = new Date(1970, 1, 1) //remove listed date
+          await token.save()
+        }
+      }
+    }
+
     try {
       // remove from listing
       let list = await Listing.findOne({
