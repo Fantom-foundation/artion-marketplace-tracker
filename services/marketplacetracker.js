@@ -120,6 +120,7 @@ const trackMarketPlace = () => {
           tokenID: tokenID,
         })
         if (token) {
+          token.price = parseFloat(price)
           token.lastSalePrice = parseFloat(price)
           token.soldAt = new Date() //set recently sold date
           token.listedAt = new Date(1970, 1, 1) //remove listed date
