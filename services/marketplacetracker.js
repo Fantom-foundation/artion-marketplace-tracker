@@ -1,3 +1,5 @@
+require('dotenv').config()
+const ethers = require('ethers')
 const mongoose = require('mongoose')
 
 const Listing = mongoose.model('Listing')
@@ -6,8 +8,27 @@ const Offer = mongoose.model('Offer')
 const ERC721TOKEN = mongoose.model('ERC721TOKEN')
 const ERC1155TOKEN = mongoose.model('ERC1155TOKEN')
 const Category = mongoose.model('Category')
+const Collection = mongoose.model('Collection')
+const Account = mongoose.model('Account')
 
-const contractUtils = require('../utils/contracts.utils')
+const MarketplaceContractInfo = require('../constants/salescontractabi')
+
+const provider = new ethers.providers.JsonRpcProvider(
+  process.env.MAINNET_RPC,
+  parseInt(process.env.MAINNET_CHAINID),
+)
+
+const loadMarketplaceContract = () => {
+  let abi = MarketplaceContractInfo.abi
+  let address = MarketplaceContractInfo.address
+
+  let contract = new ethers.Contract(address, abi, provider)
+  return contract
+}
+
+const marketplaceSC = loadMarketplaceContract()
+
+const sendEmail = require('../utils/mailer')
 
 const toLowerCase = (val) => {
   if (val) return val.toLowerCase()
@@ -17,8 +38,55 @@ const parseToFTM = (inWei) => {
   return parseFloat(inWei.toString()) / 10 ** 18
 }
 
+const getCollectionName = async (address) => {
+  try {
+    let collection = await Collection.findOne({
+      erc721Address: toLowerCase(address),
+    })
+    if (collection) return collection.collectionName
+    else return address
+  } catch (error) {
+    return address
+  }
+}
+
+const getNFTItemName = async (nft, tokenID, category) => {
+  if (category == 1155)
+    try {
+      let token = await ERC1155TOKEN.findOne({
+        contractAddress: toLowerCase(nft),
+        tokenID: tokenID,
+      })
+      if (token) return token.name
+      else return ''
+    } catch (error) {
+      return ''
+    }
+  else if (category == 721)
+    try {
+      let token = await ERC721TOKEN.findOne({
+        contractAddress: toLowerCase(nft),
+        tokenID: tokenID,
+      })
+      if (token) return token.name
+      else return ''
+    } catch (error) {
+      return ''
+    }
+  else return nft
+}
+
+const getUserAlias = async (walletAddress) => {
+  try {
+    let account = await Account.findOne({ address: walletAddress })
+    if (account) return account.alias
+    else return walletAddress
+  } catch (error) {
+    return walletAddress
+  }
+}
+
 const trackMarketPlace = () => {
-  const marketplaceSC = contractUtils.loadContractFromAddress()
   console.log('marketplace tracker has been started')
 
   //   item listed
@@ -64,24 +132,24 @@ const trackMarketPlace = () => {
           }
         }
       }
-
+      // remove if the same icon list still exists
       try {
-        let list = await Listing.findOne({
+        await Listing.deleteMany({
+          owner: owner,
           minter: nft,
           tokenID: tokenID,
-          owner: owner,
         })
-        if (!list) {
-          let newList = new Listing()
-          newList.owner = owner
-          newList.minter = nft
-          newList.tokenID = tokenID
-          newList.price = pricePerItem
-          await newList.save()
-        } else {
-          list.quantity = parseInt(list.quantity) + parseInt(quantity)
-          await list.save()
-        }
+      } catch (error) {}
+
+      try {
+        let newList = new Listing()
+        newList.owner = owner
+        newList.minter = nft
+        newList.tokenID = tokenID
+        newList.quantity = quantity
+        newList.price = pricePerItem
+        newList.startTime = new Date(parseFloat(startingTime) * 1000)
+        await newList.save()
       } catch (error) {}
     },
   )
@@ -95,6 +163,7 @@ const trackMarketPlace = () => {
     // update last sale price
     // first update the token price
     let category = await Category.findOne({ minterAddress: nft })
+
     if (category) {
       let type = parseInt(category.type)
       if (type == 721) {
@@ -122,7 +191,51 @@ const trackMarketPlace = () => {
           await token.save()
         }
       }
+      // send mail here to buyer first
+      let account = await Account.findOne({ address: buyer })
+      if (account) {
+        let to = account.email
+        let alias = account.alias
+        let collectionName = await getCollectionName(nft)
+        let tokenName = await getNFTItemName(nft, tokenID, type)
+        let data = {
+          type: 'sale',
+          to: to,
+          isBuyer: true,
+          event: 'ItemSold',
+          subject: 'You have purchased an NFT Item!',
+          alias: alias,
+          collectionName: collectionName,
+          tokenName: tokenName,
+          tokenID: tokenID,
+          nftAddress: nft,
+          price: price,
+        }
+        sendEmail(data)
+      }
+      account = await Account.findOne({ address: seller })
+      if (account) {
+        let to = account.email
+        let alias = account.alias
+        let collectionName = await getCollectionName(nft)
+        let tokenName = await getNFTItemName(nft, tokenID, type)
+        let data = {
+          type: 'sale',
+          to: to,
+          isBuyer: false,
+          event: 'ItemSold',
+          subject: 'You have sold out an NFT Item!',
+          alias: alias,
+          collectionName: collectionName,
+          tokenName: tokenName,
+          tokenID: tokenID,
+          nftAddress: nft,
+          price: price,
+        }
+        sendEmail(data)
+      }
     }
+
     try {
       // add new trade history
       let history = new TradeHistory()
@@ -132,26 +245,17 @@ const trackMarketPlace = () => {
       history.tokenID = tokenID
       history.price = price
       await history.save()
+    } catch (error) {
+      console.log(error)
+    }
+    try {
       // remove from listing
-      let list = await Listing.findOne({
+      await Listing.deleteMany({
         owner: seller,
         minter: nft,
         tokenID: tokenID,
       })
-      if (parseInt(list.quantity) < 1) {
-      } else if (parseInt(list.quantity) == 1) {
-        await Listing.deleteOne({
-          owner: seller,
-          minter: nft,
-          tokenID: tokenID,
-        })
-      } else {
-        list.quantity = parseInt(list.quantity) - 1
-        await list.save()
-      }
-    } catch (error) {
-      console.log(error)
-    }
+    } catch (error) {}
   })
 
   //   item updated
@@ -187,12 +291,20 @@ const trackMarketPlace = () => {
         }
       }
     }
+    // update price from listing
+    let list = await Listing.findOne({
+      owner: owner,
+      minter: nft,
+      tokenID: tokenID,
+    })
+    if (list) {
+      list.price = price
+      await list.save()
+    }
   })
 
   //   item cancelled
   marketplaceSC.on('ItemCanceled', async (owner, nft, tokenID) => {
-    console.log('item cancelled')
-    console.log(owner, nft, tokenID)
     owner = toLowerCase(owner)
     nft = toLowerCase(nft)
 
@@ -222,22 +334,11 @@ const trackMarketPlace = () => {
 
     try {
       // remove from listing
-      let list = await Listing.findOne({
+      await Listing.deleteMany({
         owner: owner,
         minter: nft,
         tokenID: tokenID,
       })
-      if (parseInt(list.quantity) < 1) {
-      } else if (parseInt(list.quantity) == 1) {
-        await Listing.deleteOne({
-          owner: owner,
-          minter: nft,
-          tokenID: tokenID,
-        })
-      } else {
-        list.quantity = parseInt(list.quantity) - 1
-        await list.save()
-      }
     } catch (error) {}
   })
 
