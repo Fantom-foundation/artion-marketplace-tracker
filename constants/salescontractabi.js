@@ -1,5 +1,6 @@
 const MarketplaceContractInfo = {
-  address: '0x428337077749cDF65000671a5c2377EF986A45c6',
+  // address: '0x428337077749cDF65000671a5c2377EF986A45c6',
+  address: '0x5597b2a31edd8c87c25427ce5ea464b48529dc40',
   abi: [
     {
       inputs: [
@@ -292,9 +293,19 @@ const MarketplaceContractInfo = {
       type: 'function',
     },
     {
+      inputs: [],
+      name: 'auction',
+      outputs: [
+        { internalType: 'contract IFantomAuction', name: '', type: 'address' },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
       inputs: [
         { internalType: 'address', name: '_nftAddress', type: 'address' },
         { internalType: 'uint256', name: '_tokenId', type: 'uint256' },
+        { internalType: 'address payable', name: '_owner', type: 'address' },
       ],
       name: 'buyItem',
       outputs: [],
@@ -360,10 +371,10 @@ const MarketplaceContractInfo = {
       inputs: [
         { internalType: 'address', name: '', type: 'address' },
         { internalType: 'uint256', name: '', type: 'uint256' },
+        { internalType: 'address', name: '', type: 'address' },
       ],
       name: 'listings',
       outputs: [
-        { internalType: 'address payable', name: 'owner', type: 'address' },
         { internalType: 'uint256', name: 'quantity', type: 'uint256' },
         { internalType: 'uint256', name: 'pricePerItem', type: 'uint256' },
         { internalType: 'uint256', name: 'startingTime', type: 'uint256' },
@@ -417,6 +428,13 @@ const MarketplaceContractInfo = {
       type: 'function',
     },
     {
+      inputs: [{ internalType: 'address', name: '_auction', type: 'address' }],
+      name: 'updateAuction',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
       inputs: [
         { internalType: 'address', name: '_nftAddress', type: 'address' },
         { internalType: 'uint256', name: '_tokenId', type: 'uint256' },
@@ -445,6 +463,17 @@ const MarketplaceContractInfo = {
         },
       ],
       name: 'updatePlatformFeeRecipient',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'address', name: '_nftAddress', type: 'address' },
+        { internalType: 'uint256', name: '_tokenId', type: 'uint256' },
+        { internalType: 'address', name: '_owner', type: 'address' },
+      ],
+      name: 'validateCancelListing',
       outputs: [],
       stateMutability: 'nonpayable',
       type: 'function',
