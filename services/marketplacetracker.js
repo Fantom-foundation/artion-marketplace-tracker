@@ -57,10 +57,10 @@ const getNFTItemName = async (nft, tokenID, category) => {
         contractAddress: toLowerCase(nft),
         tokenID: tokenID,
       })
-      if (token) return token.name
-      else return ''
+      if (token) return token.name ? token.name : tokenID
+      else return tokenID
     } catch (error) {
-      return ''
+      return tokenID
     }
   else if (category == 721)
     try {
@@ -68,10 +68,10 @@ const getNFTItemName = async (nft, tokenID, category) => {
         contractAddress: toLowerCase(nft),
         tokenID: tokenID,
       })
-      if (token) return token.name
-      else return ''
+      if (token) return token.name ? token.name : tokenID
+      else return tokenID
     } catch (error) {
-      return ''
+      return tokenID
     }
   else return nft
 }
@@ -102,17 +102,6 @@ const trackMarketPlace = () => {
       isPrivate,
       allowedAddress,
     ) => {
-      console.log('item listed')
-      console.log(
-        owner,
-        nft,
-        tokenID,
-        quantity,
-        pricePerItem,
-        startingTime,
-        isPrivate,
-        allowedAddress,
-      )
       owner = toLowerCase(owner)
       nft = toLowerCase(nft)
       allowedAddress = toLowerCase(allowedAddress)
@@ -277,8 +266,6 @@ const trackMarketPlace = () => {
   //   item updated
 
   marketplaceSC.on('ItemUpdated', async (owner, nft, tokenID, price) => {
-    console.log('item updated')
-    console.log(owner, nft, tokenID, price)
     owner = toLowerCase(owner)
     nft = toLowerCase(nft)
     price = parseToFTM(price)
@@ -321,8 +308,6 @@ const trackMarketPlace = () => {
 
   //   item cancelled
   marketplaceSC.on('ItemCanceled', async (owner, nft, tokenID) => {
-    console.log('item cancelled')
-    console.log(owner, nft, tokenID)
     owner = toLowerCase(owner)
     nft = toLowerCase(nft)
 
@@ -391,14 +376,52 @@ const trackMarketPlace = () => {
         offer.deadline = deadline
         await offer.save()
       } catch (error) {}
+      // now send email to the owner
+      try {
+        let category = await Category.findOne({ minterAddress: nft })
+        if (category) {
+          let type = parseInt(category.type)
+          if (type == 721) {
+            let tokenOwner = await ERC721TOKEN.findOne({
+              contractAddress: nft,
+              tokenID: tokenID,
+            })
+            let owner = await Account.findOne({
+              address: tokenOwner.owner,
+            })
+            if (owner) {
+              let alias = await getUserAlias(owner.address)
+              let tokenName = await getNFTItemName(nft, tokenID, 721)
+              let creatorAlias = await getUserAlias(creator)
+              let collectionName = await getCollectionName(nft)
+              let data = {
+                type: 721,
+                to: owner.email,
+                from: creatorAlias,
+                isBuyer: false,
+                event: 'OfferCreated',
+                subject: 'You received an Offer!',
+                alias: alias,
+                collectionName: collectionName,
+                tokenName: tokenName,
+                tokenID: tokenID,
+                nftAddress: nft,
+                price: pricePerItem,
+              }
+              sendEmail(data)
+            }
+          } else if (category == 1155) {
+          }
+        }
+      } catch (error) {
+        console.log(error)
+      }
     },
   )
 
   // offer cancelled
   marketplaceSC.on('OfferCanceled', async (creator, nft, tokenID) => {
-    console.log('offer canceled')
     try {
-      console.log(creator, nft, tokenID)
       creator = toLowerCase(creator)
       nft = toLowerCase(nft)
       await Offer.deleteMany({
@@ -407,6 +430,45 @@ const trackMarketPlace = () => {
         tokenID: tokenID,
       })
     } catch (error) {}
+    // now send email
+    try {
+      let category = await Category.findOne({ minterAddress: nft })
+      if (category) {
+        let type = parseInt(category.type)
+        if (type == 721) {
+          let tokenOwner = await ERC721TOKEN.findOne({
+            contractAddress: nft,
+            tokenID: tokenID,
+          })
+          let owner = await Account.findOne({
+            address: tokenOwner.owner,
+          })
+          if (owner) {
+            let alias = await getUserAlias(owner.address)
+            let tokenName = await getNFTItemName(nft, tokenID, 721)
+            let creatorAlias = await getUserAlias(creator)
+            let collectionName = await getCollectionName(nft)
+            let data = {
+              type: 721,
+              to: owner.email,
+              from: creatorAlias,
+              isBuyer: false,
+              event: 'OfferCanceled',
+              subject: 'Offer has been withdrawn for your item!',
+              alias: alias,
+              collectionName: collectionName,
+              tokenName: tokenName,
+              tokenID: tokenID,
+              nftAddress: nft,
+            }
+            if (creatorAlias != alias) sendEmail(data)
+          }
+        } else if (category == 1155) {
+        }
+      }
+    } catch (error) {
+      console.log(error)
+    }
   })
 }
 
