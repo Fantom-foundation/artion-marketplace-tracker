@@ -102,6 +102,17 @@ const trackMarketPlace = () => {
       isPrivate,
       allowedAddress,
     ) => {
+      console.log('item listed')
+      console.log(
+        owner,
+        nft,
+        tokenID,
+        quantity,
+        pricePerItem,
+        startingTime,
+        isPrivate,
+        allowedAddress,
+      )
       owner = toLowerCase(owner)
       nft = toLowerCase(nft)
       allowedAddress = toLowerCase(allowedAddress)
@@ -155,108 +166,113 @@ const trackMarketPlace = () => {
   )
 
   //   item sold
-  marketplaceSC.on('ItemSold', async (seller, buyer, nft, tokenID, price) => {
-    seller = toLowerCase(seller)
-    buyer = toLowerCase(buyer)
-    nft = toLowerCase(nft)
-    price = parseToFTM(price)
-    // update last sale price
-    // first update the token price
-    let category = await Category.findOne({ minterAddress: nft })
+  marketplaceSC.on(
+    'ItemSold',
+    async (seller, buyer, nft, tokenID, quantity, price) => {
+      seller = toLowerCase(seller)
+      buyer = toLowerCase(buyer)
+      nft = toLowerCase(nft)
+      price = parseToFTM(price)
+      quantity = parseInt(quantity)
+      // update last sale price
+      // first update the token price
+      let category = await Category.findOne({ minterAddress: nft })
 
-    if (category) {
-      let type = parseInt(category.type)
-      if (type == 721) {
-        let token = await ERC721TOKEN.findOne({
-          contractAddress: nft,
+      if (category) {
+        let type = parseInt(category.type)
+        if (type == 721) {
+          let token = await ERC721TOKEN.findOne({
+            contractAddress: nft,
+            tokenID: tokenID,
+          })
+          if (token) {
+            token.price = parseFloat(price)
+            token.lastSalePrice = parseFloat(price)
+            token.soldAt = new Date() //set recently sold date
+            token.listedAt = new Date(1970, 1, 1) //remove listed date
+            await token.save()
+          }
+        } else if (type == 1155) {
+          let token = await ERC1155TOKEN.findOne({
+            contractAddress: nft,
+            tokenID: tokenID,
+          })
+          if (token) {
+            token.price = parseFloat(price)
+            token.lastSalePrice = parseFloat(price)
+            token.soldAt = new Date() //set recently sold date
+            token.listedAt = new Date(1970, 1, 1) //remove listed date
+            await token.save()
+          }
+        }
+        // send mail here to buyer first
+        let account = await Account.findOne({ address: buyer })
+        if (account) {
+          let to = account.email
+          let alias = account.alias
+          let collectionName = await getCollectionName(nft)
+          let tokenName = await getNFTItemName(nft, tokenID, type)
+          let data = {
+            type: 'sale',
+            to: to,
+            isBuyer: true,
+            event: 'ItemSold',
+            subject: 'You have purchased an NFT Item!',
+            alias: alias,
+            collectionName: collectionName,
+            tokenName: tokenName,
+            tokenID: tokenID,
+            nftAddress: nft,
+            price: price,
+          }
+          sendEmail(data)
+        }
+        account = await Account.findOne({ address: seller })
+        if (account) {
+          let to = account.email
+          let alias = account.alias
+          let collectionName = await getCollectionName(nft)
+          let tokenName = await getNFTItemName(nft, tokenID, type)
+          let data = {
+            type: 'sale',
+            to: to,
+            isBuyer: false,
+            event: 'ItemSold',
+            subject: 'You have sold out an NFT Item!',
+            alias: alias,
+            collectionName: collectionName,
+            tokenName: tokenName,
+            tokenID: tokenID,
+            nftAddress: nft,
+            price: price,
+          }
+          sendEmail(data)
+        }
+      }
+
+      try {
+        // add new trade history
+        let history = new TradeHistory()
+        history.collectionAddress = nft
+        history.from = seller
+        history.to = buyer
+        history.tokenID = tokenID
+        history.price = price
+        history.value = quantity
+        await history.save()
+      } catch (error) {
+        console.log(error)
+      }
+      try {
+        // remove from listing
+        await Listing.deleteMany({
+          owner: seller,
+          minter: nft,
           tokenID: tokenID,
         })
-        if (token) {
-          token.price = parseFloat(price)
-          token.lastSalePrice = parseFloat(price)
-          token.soldAt = new Date() //set recently sold date
-          token.listedAt = new Date(1970, 1, 1) //remove listed date
-          await token.save()
-        }
-      } else if (type == 1155) {
-        let token = await ERC1155TOKEN.findOne({
-          contractAddress: nft,
-          tokenID: tokenID,
-        })
-        if (token) {
-          token.price = parseFloat(price)
-          token.lastSalePrice = parseFloat(price)
-          token.soldAt = new Date() //set recently sold date
-          token.listedAt = new Date(1970, 1, 1) //remove listed date
-          await token.save()
-        }
-      }
-      // send mail here to buyer first
-      let account = await Account.findOne({ address: buyer })
-      if (account) {
-        let to = account.email
-        let alias = account.alias
-        let collectionName = await getCollectionName(nft)
-        let tokenName = await getNFTItemName(nft, tokenID, type)
-        let data = {
-          type: 'sale',
-          to: to,
-          isBuyer: true,
-          event: 'ItemSold',
-          subject: 'You have purchased an NFT Item!',
-          alias: alias,
-          collectionName: collectionName,
-          tokenName: tokenName,
-          tokenID: tokenID,
-          nftAddress: nft,
-          price: price,
-        }
-        sendEmail(data)
-      }
-      account = await Account.findOne({ address: seller })
-      if (account) {
-        let to = account.email
-        let alias = account.alias
-        let collectionName = await getCollectionName(nft)
-        let tokenName = await getNFTItemName(nft, tokenID, type)
-        let data = {
-          type: 'sale',
-          to: to,
-          isBuyer: false,
-          event: 'ItemSold',
-          subject: 'You have sold out an NFT Item!',
-          alias: alias,
-          collectionName: collectionName,
-          tokenName: tokenName,
-          tokenID: tokenID,
-          nftAddress: nft,
-          price: price,
-        }
-        sendEmail(data)
-      }
-    }
-
-    try {
-      // add new trade history
-      let history = new TradeHistory()
-      history.collectionAddress = nft
-      history.from = seller
-      history.to = buyer
-      history.tokenID = tokenID
-      history.price = price
-      await history.save()
-    } catch (error) {
-      console.log(error)
-    }
-    try {
-      // remove from listing
-      await Listing.deleteMany({
-        owner: seller,
-        minter: nft,
-        tokenID: tokenID,
-      })
-    } catch (error) {}
-  })
+      } catch (error) {}
+    },
+  )
 
   //   item updated
 
@@ -305,6 +321,8 @@ const trackMarketPlace = () => {
 
   //   item cancelled
   marketplaceSC.on('ItemCanceled', async (owner, nft, tokenID) => {
+    console.log('item cancelled')
+    console.log(owner, nft, tokenID)
     owner = toLowerCase(owner)
     nft = toLowerCase(nft)
 

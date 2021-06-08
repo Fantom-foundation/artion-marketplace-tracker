@@ -1,6 +1,5 @@
 const MarketplaceContractInfo = {
-  // address: '0x428337077749cDF65000671a5c2377EF986A45c6',
-  address: '0x5597b2a31edd8c87c25427ce5ea464b48529dc40',
+  address: '0x61bE08096165cE2f474fA130548F1F4bE2CDe57c',
   abi: [
     {
       inputs: [
@@ -119,6 +118,12 @@ const MarketplaceContractInfo = {
           indexed: false,
           internalType: 'uint256',
           name: 'tokenId',
+          type: 'uint256',
+        },
+        {
+          indexed: false,
+          internalType: 'uint256',
+          name: 'quantity',
           type: 'uint256',
         },
         {
