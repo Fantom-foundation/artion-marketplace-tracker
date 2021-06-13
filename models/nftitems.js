@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const ERC721TOKEN = mongoose.Schema(
+const NFTITEM = mongoose.Schema(
   {
     contractAddress: { type: String, required: true },
     tokenID: { type: Number, required: true },
@@ -8,27 +8,29 @@ const ERC721TOKEN = mongoose.Schema(
     thumbnailPath: { type: String, default: "-" },
     symbol: { type: String },
     name: { type: String }, //for search filter
-    owner: { type: String, required: true },
+    owner: { type: String },
+    supply: { type: Number, default: 1 },
     royalty: { type: Number, default: 0 },
     category: [{ type: String }],
     price: { type: Number, default: 0 }, //for most expensive
     lastSalePrice: { type: Number, default: 0 }, //for highest last sale price
     viewed: { type: Number, default: 0 }, //for mostly viewed
-    createdAt: { type: Date, default: Date.now }, //for recently created
+    createdAt: { type: Date }, //for recently created
     listedAt: { type: Date }, //for recently listed
     soldAt: { type: Date }, //for recently sold
     saleEndsAt: { type: Date }, //for auction
+    tokenType: { type: Number, default: 721 },
   },
   {
     timestamps: true,
   }
 );
-ERC721TOKEN.index(
+NFTITEM.index(
   { tokenURI: 1, tokenID: -1, contractAddress: -1 },
   { unique: true }
 );
 
-ERC721TOKEN.methods.toSimpleJson = function () {
+NFTITEM.methods.toSimpleJson = function () {
   return {
     contractAddress: this.contractAddress,
     tokenID: this.tokenID,
@@ -39,4 +41,4 @@ ERC721TOKEN.methods.toSimpleJson = function () {
   };
 };
 
-mongoose.model("ERC721TOKEN", ERC721TOKEN);
+mongoose.model("NFTITEM", NFTITEM);

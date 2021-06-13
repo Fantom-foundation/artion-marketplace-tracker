@@ -5,8 +5,7 @@ const mongoose = require('mongoose')
 const Listing = mongoose.model('Listing')
 const TradeHistory = mongoose.model('TradeHistory')
 const Offer = mongoose.model('Offer')
-const ERC721TOKEN = mongoose.model('ERC721TOKEN')
-const ERC1155TOKEN = mongoose.model('ERC1155TOKEN')
+const NFTITEM = mongoose.model('NFTITEM')
 const Category = mongoose.model('Category')
 const Collection = mongoose.model('Collection')
 const Account = mongoose.model('Account')
@@ -50,30 +49,17 @@ const getCollectionName = async (address) => {
   }
 }
 
-const getNFTItemName = async (nft, tokenID, category) => {
-  if (category == 1155)
-    try {
-      let token = await ERC1155TOKEN.findOne({
-        contractAddress: toLowerCase(nft),
-        tokenID: tokenID,
-      })
-      if (token) return token.name ? token.name : tokenID
-      else return tokenID
-    } catch (error) {
-      return tokenID
-    }
-  else if (category == 721)
-    try {
-      let token = await ERC721TOKEN.findOne({
-        contractAddress: toLowerCase(nft),
-        tokenID: tokenID,
-      })
-      if (token) return token.name ? token.name : tokenID
-      else return tokenID
-    } catch (error) {
-      return tokenID
-    }
-  else return nft
+const getNFTItemName = async (nft, tokenID) => {
+  try {
+    let token = await NFTITEM.findOne({
+      contractAddress: toLowerCase(nft),
+      tokenID: tokenID,
+    })
+    if (token) return token.name ? token.name : tokenID
+    else return tokenID
+  } catch (error) {
+    return tokenID
+  }
 }
 
 const getUserAlias = async (walletAddress) => {
@@ -109,27 +95,14 @@ const trackMarketPlace = () => {
       // first update the token price
       let category = await Category.findOne({ minterAddress: nft })
       if (category) {
-        let type = parseInt(category.type)
-        if (type == 721) {
-          let token = await ERC721TOKEN.findOne({
-            contractAddress: nft,
-            tokenID: tokenID,
-          })
-          if (token) {
-            token.price = parseFloat(pricePerItem)
-            token.listedAt = new Date() // set listed date
-            await token.save()
-          }
-        } else if (type == 1155) {
-          let token = await ERC1155TOKEN.findOne({
-            contractAddress: nft,
-            tokenID: tokenID,
-          })
-          if (token) {
-            token.price = parseFloat(pricePerItem)
-            token.listedAt = new Date() // set listed date
-            await token.save()
-          }
+        let token = await NFTITEM.findOne({
+          contractAddress: nft,
+          tokenID: tokenID,
+        })
+        if (token) {
+          token.price = parseFloat(pricePerItem)
+          token.listedAt = new Date() // set listed date
+          await token.save()
         }
       }
       // remove if the same icon list still exists
@@ -168,31 +141,16 @@ const trackMarketPlace = () => {
       let category = await Category.findOne({ minterAddress: nft })
 
       if (category) {
-        let type = parseInt(category.type)
-        if (type == 721) {
-          let token = await ERC721TOKEN.findOne({
-            contractAddress: nft,
-            tokenID: tokenID,
-          })
-          if (token) {
-            token.price = parseFloat(price)
-            token.lastSalePrice = parseFloat(price)
-            token.soldAt = new Date() //set recently sold date
-            token.listedAt = new Date(1970, 1, 1) //remove listed date
-            await token.save()
-          }
-        } else if (type == 1155) {
-          let token = await ERC1155TOKEN.findOne({
-            contractAddress: nft,
-            tokenID: tokenID,
-          })
-          if (token) {
-            token.price = parseFloat(price)
-            token.lastSalePrice = parseFloat(price)
-            token.soldAt = new Date() //set recently sold date
-            token.listedAt = new Date(1970, 1, 1) //remove listed date
-            await token.save()
-          }
+        let token = await NFTITEM.findOne({
+          contractAddress: nft,
+          tokenID: tokenID,
+        })
+        if (token) {
+          token.price = parseFloat(price)
+          token.lastSalePrice = parseFloat(price)
+          token.soldAt = new Date() //set recently sold date
+          token.listedAt = new Date(1970, 1, 1) //remove listed date
+          await token.save()
         }
         // send mail here to buyer first
         let account = await Account.findOne({ address: buyer })
@@ -200,7 +158,7 @@ const trackMarketPlace = () => {
           let to = account.email
           let alias = account.alias
           let collectionName = await getCollectionName(nft)
-          let tokenName = await getNFTItemName(nft, tokenID, type)
+          let tokenName = await getNFTItemName(nft, tokenID)
           let data = {
             type: 'sale',
             to: to,
@@ -221,7 +179,7 @@ const trackMarketPlace = () => {
           let to = account.email
           let alias = account.alias
           let collectionName = await getCollectionName(nft)
-          let tokenName = await getNFTItemName(nft, tokenID, type)
+          let tokenName = await getNFTItemName(nft, tokenID)
           let data = {
             type: 'sale',
             to: to,
@@ -273,25 +231,13 @@ const trackMarketPlace = () => {
     // first update the token price
     let category = await Category.findOne({ minterAddress: nft })
     if (category) {
-      let type = parseInt(category.type)
-      if (type == 721) {
-        let token = await ERC721TOKEN.findOne({
-          contractAddress: nft,
-          tokenID: tokenID,
-        })
-        if (token) {
-          token.price = parseFloat(price)
-          await token.save()
-        }
-      } else if (type == 1155) {
-        let token = await ERC1155TOKEN.findOne({
-          contractAddress: nft,
-          tokenID: tokenID,
-        })
-        if (token) {
-          token.price = parseFloat(price)
-          await token.save()
-        }
+      let token = await NFTITEM.findOne({
+        contractAddress: nft,
+        tokenID: tokenID,
+      })
+      if (token) {
+        token.price = parseFloat(price)
+        await token.save()
       }
     }
     // update price from listing
@@ -313,25 +259,13 @@ const trackMarketPlace = () => {
 
     let category = await Category.findOne({ minterAddress: nft })
     if (category) {
-      let type = parseInt(category.type)
-      if (type == 721) {
-        let token = await ERC721TOKEN.findOne({
-          contractAddress: nft,
-          tokenID: tokenID,
-        })
-        if (token) {
-          token.listedAt = new Date(1970, 1, 1) //remove listed date
-          await token.save()
-        }
-      } else if (type == 1155) {
-        let token = await ERC1155TOKEN.findOne({
-          contractAddress: nft,
-          tokenID: tokenID,
-        })
-        if (token) {
-          token.listedAt = new Date(1970, 1, 1) //remove listed date
-          await token.save()
-        }
+      let token = await NFTITEM.findOne({
+        contractAddress: nft,
+        tokenID: tokenID,
+      })
+      if (token) {
+        token.listedAt = new Date(1970, 1, 1) //remove listed date
+        await token.save()
       }
     }
 
@@ -382,7 +316,7 @@ const trackMarketPlace = () => {
         if (category) {
           let type = parseInt(category.type)
           if (type == 721) {
-            let tokenOwner = await ERC721TOKEN.findOne({
+            let tokenOwner = await NFTITEM.findOne({
               contractAddress: nft,
               tokenID: tokenID,
             })
@@ -391,7 +325,7 @@ const trackMarketPlace = () => {
             })
             if (owner) {
               let alias = await getUserAlias(owner.address)
-              let tokenName = await getNFTItemName(nft, tokenID, 721)
+              let tokenName = await getNFTItemName(nft, tokenID)
               let creatorAlias = await getUserAlias(creator)
               let collectionName = await getCollectionName(nft)
               let data = {
@@ -436,7 +370,7 @@ const trackMarketPlace = () => {
       if (category) {
         let type = parseInt(category.type)
         if (type == 721) {
-          let tokenOwner = await ERC721TOKEN.findOne({
+          let tokenOwner = await NFTITEM.findOne({
             contractAddress: nft,
             tokenID: tokenID,
           })
@@ -445,7 +379,7 @@ const trackMarketPlace = () => {
           })
           if (owner) {
             let alias = await getUserAlias(owner.address)
-            let tokenName = await getNFTItemName(nft, tokenID, 721)
+            let tokenName = await getNFTItemName(nft, tokenID)
             let creatorAlias = await getUserAlias(creator)
             let collectionName = await getCollectionName(nft)
             let data = {
