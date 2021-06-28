@@ -1,5 +1,5 @@
 const MarketplaceContractInfo = {
-  address: '0x61bE08096165cE2f474fA130548F1F4bE2CDe57c',
+  address: '0x17bDD333e7DAD2bDe1109B1f6E3c308F9f4E4f93',
   abi: [
     {
       inputs: [
@@ -389,6 +389,19 @@ const MarketplaceContractInfo = {
       type: 'function',
     },
     {
+      inputs: [],
+      name: 'marketplace',
+      outputs: [
+        {
+          internalType: 'contract IFantomBundleMarketplace',
+          name: '',
+          type: 'address',
+        },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
       inputs: [
         { internalType: 'address', name: '', type: 'address' },
         { internalType: 'uint256', name: '', type: 'uint256' },
@@ -441,6 +454,15 @@ const MarketplaceContractInfo = {
     },
     {
       inputs: [
+        { internalType: 'address', name: '_marketplace', type: 'address' },
+      ],
+      name: 'updateBundleMarketplace',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
         { internalType: 'address', name: '_nftAddress', type: 'address' },
         { internalType: 'uint256', name: '_tokenId', type: 'uint256' },
         { internalType: 'uint256', name: '_newPrice', type: 'uint256' },
@@ -479,6 +501,18 @@ const MarketplaceContractInfo = {
         { internalType: 'address', name: '_owner', type: 'address' },
       ],
       name: 'validateCancelListing',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'address', name: '_nftAddress', type: 'address' },
+        { internalType: 'uint256', name: '_tokenId', type: 'uint256' },
+        { internalType: 'address', name: '_seller', type: 'address' },
+        { internalType: 'address', name: '_buyer', type: 'address' },
+      ],
+      name: 'validateItemSold',
       outputs: [],
       stateMutability: 'nonpayable',
       type: 'function',
