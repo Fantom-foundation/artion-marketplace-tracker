@@ -34,7 +34,7 @@ const trackMarketPlace = () => {
   //   item listed
   marketplaceSC.on(
     'ItemListed',
-    async (
+    (
       owner,
       nft,
       tokenID,
@@ -67,7 +67,7 @@ const trackMarketPlace = () => {
 
   //   item updated
 
-  marketplaceSC.on('ItemUpdated', async (owner, nft, tokenID, price) => {
+  marketplaceSC.on('ItemUpdated', (owner, nft, tokenID, price) => {
     callAPI('itemUpdated', { owner, nft, tokenID, price })
   })
 
@@ -93,7 +93,7 @@ const trackMarketPlace = () => {
   )
 
   // offer cancelled
-  marketplaceSC.on('OfferCanceled', async (creator, nft, tokenID) => {
+  marketplaceSC.on('OfferCanceled', (creator, nft, tokenID) => {
     callAPI('offerCanceled', { creator, nft, tokenID })
   })
 }
