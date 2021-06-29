@@ -20,8 +20,8 @@ const marketplaceSC = loadMarketplaceContract()
 
 const apiEndPoint = 'https://api0.artion.io/marketplace/'
 
-const callAPI = (endpoint, data) => {
-  axios({
+const callAPI = async (endpoint, data) => {
+  await axios({
     method: 'post',
     url: apiEndPoint + endpoint,
     data,
@@ -34,7 +34,7 @@ const trackMarketPlace = () => {
   //   item listed
   marketplaceSC.on(
     'ItemListed',
-    (
+    async (
       owner,
       nft,
       tokenID,
@@ -44,7 +44,7 @@ const trackMarketPlace = () => {
       isPrivate,
       allowedAddress,
     ) => {
-      callAPI('itemListed', {
+      await callAPI('itemListed', {
         owner,
         nft,
         tokenID,
@@ -60,27 +60,42 @@ const trackMarketPlace = () => {
   //   item sold
   marketplaceSC.on(
     'ItemSold',
-    (seller, buyer, nft, tokenID, quantity, price) => {
-      callAPI('itemSold', { seller, buyer, nft, tokenID, quantity, price })
+    async (seller, buyer, nft, tokenID, quantity, price) => {
+      await callAPI('itemSold', {
+        seller,
+        buyer,
+        nft,
+        tokenID,
+        quantity,
+        price,
+      })
     },
   )
 
   //   item updated
 
-  marketplaceSC.on('ItemUpdated', (owner, nft, tokenID, price) => {
-    callAPI('itemUpdated', { owner, nft, tokenID, price })
+  marketplaceSC.on('ItemUpdated', async (owner, nft, tokenID, price) => {
+    await callAPI('itemUpdated', { owner, nft, tokenID, price })
   })
 
   //   item cancelled
-  marketplaceSC.on('ItemCanceled', (owner, nft, tokenID) => {
-    callAPI('itemCanceled', { owner, nft, tokenID })
+  marketplaceSC.on('ItemCanceled', async (owner, nft, tokenID) => {
+    await callAPI('itemCanceled', { owner, nft, tokenID })
   })
 
   // offer created
   marketplaceSC.on(
     'OfferCreated',
-    (creator, nft, tokenID, payToken, quantity, pricePerItem, deadline) => {
-      callAPI('offerCreated', {
+    async (
+      creator,
+      nft,
+      tokenID,
+      payToken,
+      quantity,
+      pricePerItem,
+      deadline,
+    ) => {
+      await callAPI('offerCreated', {
         creator,
         nft,
         tokenID,
@@ -93,8 +108,8 @@ const trackMarketPlace = () => {
   )
 
   // offer cancelled
-  marketplaceSC.on('OfferCanceled', (creator, nft, tokenID) => {
-    callAPI('offerCanceled', { creator, nft, tokenID })
+  marketplaceSC.on('OfferCanceled', async (creator, nft, tokenID) => {
+    await callAPI('offerCanceled', { creator, nft, tokenID })
   })
 }
 
