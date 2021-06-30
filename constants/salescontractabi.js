@@ -1,5 +1,5 @@
 const MarketplaceContractInfo = {
-  address: '0x17bDD333e7DAD2bDe1109B1f6E3c308F9f4E4f93',
+  address: '0x93c2f4b3ACa55b09FaD758030aeC13F024a3ED20',
   abi: [
     {
       inputs: [
@@ -299,6 +299,13 @@ const MarketplaceContractInfo = {
     },
     {
       inputs: [],
+      name: 'artion',
+      outputs: [{ internalType: 'address', name: '', type: 'address' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
+      inputs: [],
       name: 'auction',
       outputs: [
         { internalType: 'contract IFantomAuction', name: '', type: 'address' },
@@ -402,6 +409,13 @@ const MarketplaceContractInfo = {
       type: 'function',
     },
     {
+      inputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      name: 'minters',
+      outputs: [{ internalType: 'address', name: '', type: 'address' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
       inputs: [
         { internalType: 'address', name: '', type: 'address' },
         { internalType: 'uint256', name: '', type: 'uint256' },
@@ -432,6 +446,16 @@ const MarketplaceContractInfo = {
       type: 'function',
     },
     {
+      inputs: [
+        { internalType: 'uint256', name: '_tokenId', type: 'uint256' },
+        { internalType: 'uint8', name: '_royalty', type: 'uint8' },
+      ],
+      name: 'registerRoyalty',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
       inputs: [],
       name: 'renounceOwnership',
       outputs: [],
@@ -439,8 +463,22 @@ const MarketplaceContractInfo = {
       type: 'function',
     },
     {
+      inputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      name: 'royalties',
+      outputs: [{ internalType: 'uint8', name: '', type: 'uint8' }],
+      stateMutability: 'view',
+      type: 'function',
+    },
+    {
       inputs: [{ internalType: 'address', name: 'newOwner', type: 'address' }],
       name: 'transferOwnership',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [{ internalType: 'address', name: '_artion', type: 'address' }],
+      name: 'updateArtion',
       outputs: [],
       stateMutability: 'nonpayable',
       type: 'function',
