@@ -35,7 +35,7 @@ const callAPI = async (endpoint, data) => {
   await axios({
     method: 'post',
     url: apiEndPoint + endpoint,
-    data: JSON.stringify(data),
+    data,
   })
 }
 
