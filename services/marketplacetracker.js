@@ -20,6 +20,17 @@ const marketplaceSC = loadMarketplaceContract()
 
 const apiEndPoint = 'https://api0.artion.io/marketplace/'
 
+const toLowerCase = (val) => {
+  if (val) return val.toLowerCase()
+  else return val
+}
+const parseToFTM = (inWei) => {
+  return parseFloat(inWei.toString()) / 10 ** 18
+}
+const convertTime = (value) => {
+  return parseFloat(value) * 1000
+}
+
 const callAPI = async (endpoint, data) => {
   await axios({
     method: 'post',
@@ -44,6 +55,12 @@ const trackMarketPlace = () => {
       isPrivate,
       allowedAddress,
     ) => {
+      owner = toLowerCase(owner)
+      nft = toLowerCase(nft)
+      tokenID = parseInt(tokenID)
+      quantity = parseInt(quantity)
+      pricePerItem = parseToFTM(pricePerItem)
+      startingTime = convertTime(startingTime)
       await callAPI('itemListed', {
         owner,
         nft,
@@ -51,8 +68,6 @@ const trackMarketPlace = () => {
         quantity,
         pricePerItem,
         startingTime,
-        isPrivate,
-        allowedAddress,
       })
     },
   )
@@ -61,6 +76,12 @@ const trackMarketPlace = () => {
   marketplaceSC.on(
     'ItemSold',
     async (seller, buyer, nft, tokenID, quantity, price) => {
+      seller = toLowerCase(seller)
+      buyer = toLowerCase(buyer)
+      nft = toLowerCase(nft)
+      tokenID = parseInt(tokenID)
+      quantity = parseInt(quantity)
+      price = parseToFTM(price)
       await callAPI('itemSold', {
         seller,
         buyer,
@@ -75,11 +96,18 @@ const trackMarketPlace = () => {
   //   item updated
 
   marketplaceSC.on('ItemUpdated', async (owner, nft, tokenID, price) => {
+    owner = toLowerCase(owner)
+    nft = toLowerCase(nft)
+    tokenID = parseInt(tokenID)
+    price = parseToFTM(price)
     await callAPI('itemUpdated', { owner, nft, tokenID, price })
   })
 
   //   item cancelled
   marketplaceSC.on('ItemCanceled', async (owner, nft, tokenID) => {
+    owner = toLowerCase(owner)
+    nft = toLowerCase(nft)
+    tokenID = parseInt(tokenID)
     await callAPI('itemCanceled', { owner, nft, tokenID })
   })
 
@@ -95,11 +123,16 @@ const trackMarketPlace = () => {
       pricePerItem,
       deadline,
     ) => {
+      creator = toLowerCase(creator)
+      nft = toLowerCase(nft)
+      tokenID = parseInt(tokenID)
+      quantity = parseInt(quantity)
+      pricePerItem = parseToFTM(pricePerItem)
+      deadline = convertTime(deadline)
       await callAPI('offerCreated', {
         creator,
         nft,
         tokenID,
-        payToken,
         quantity,
         pricePerItem,
         deadline,
@@ -109,6 +142,9 @@ const trackMarketPlace = () => {
 
   // offer cancelled
   marketplaceSC.on('OfferCanceled', async (creator, nft, tokenID) => {
+    creator = toLowerCase(creator)
+    nft = toLowerCase(nft)
+    tokenID = parseInt(tokenID)
     await callAPI('offerCanceled', { creator, nft, tokenID })
   })
 }
