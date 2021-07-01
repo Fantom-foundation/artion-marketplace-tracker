@@ -18,7 +18,7 @@ const loadMarketplaceContract = () => {
 
 const marketplaceSC = loadMarketplaceContract()
 
-const apiEndPoint = 'https://api0.artion.io/marketplace/'
+const apiEndPoint = process.env.API_ENDPOINT
 
 const toLowerCase = (val) => {
   if (val) return val.toLowerCase()
