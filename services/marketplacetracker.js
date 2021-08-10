@@ -95,7 +95,6 @@ const trackMarketPlace = () => {
       quantity = parseInt(quantity)
       price = parseToFTM(price)
       paymentToken = toLowerCase(paymentToken)
-      unitPrice = parseFloat(unitPrice)
       await callAPI('itemSold', {
         seller,
         buyer,
@@ -103,7 +102,6 @@ const trackMarketPlace = () => {
         tokenID,
         quantity,
         paymentToken,
-        unitPrice,
         price,
       })
     },
