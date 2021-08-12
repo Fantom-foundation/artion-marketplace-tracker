@@ -53,8 +53,6 @@ const trackMarketPlace = () => {
       paymentToken,
       pricePerItem,
       startingTime,
-      isPrivate,
-      allowedAddress,
     ) => {
       owner = toLowerCase(owner)
       nft = toLowerCase(nft)
@@ -136,7 +134,6 @@ const trackMarketPlace = () => {
       creator,
       nft,
       tokenID,
-      payToken,
       quantity,
       paymentToken,
       pricePerItem,
