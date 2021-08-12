@@ -1,18 +1,6 @@
 const MarketplaceContractInfo = {
-  address: '0x19fD7C9B72cd944f987E0aB1FdD33fF8f68Cf87C',
+  address: '0xBA8A36804a6BaE272fe4C8A2F5Cf551b03C26A01',
   abi: [
-    {
-      inputs: [
-        {
-          internalType: 'address payable',
-          name: '_feeRecipient',
-          type: 'address',
-        },
-        { internalType: 'uint256', name: '_platformFee', type: 'uint256' },
-      ],
-      stateMutability: 'nonpayable',
-      type: 'constructor',
-    },
     {
       anonymous: false,
       inputs: [
@@ -67,6 +55,12 @@ const MarketplaceContractInfo = {
         },
         {
           indexed: false,
+          internalType: 'address',
+          name: 'payToken',
+          type: 'address',
+        },
+        {
+          indexed: false,
           internalType: 'uint256',
           name: 'pricePerItem',
           type: 'uint256',
@@ -76,18 +70,6 @@ const MarketplaceContractInfo = {
           internalType: 'uint256',
           name: 'startingTime',
           type: 'uint256',
-        },
-        {
-          indexed: false,
-          internalType: 'bool',
-          name: 'isPrivate',
-          type: 'bool',
-        },
-        {
-          indexed: false,
-          internalType: 'address',
-          name: 'allowedAddress',
-          type: 'address',
         },
       ],
       name: 'ItemListed',
@@ -128,8 +110,20 @@ const MarketplaceContractInfo = {
         },
         {
           indexed: false,
+          internalType: 'address',
+          name: 'payToken',
+          type: 'address',
+        },
+        {
+          indexed: false,
           internalType: 'uint256',
-          name: 'price',
+          name: 'unitPrice',
+          type: 'uint256',
+        },
+        {
+          indexed: false,
+          internalType: 'uint256',
+          name: 'pricePerItem',
           type: 'uint256',
         },
       ],
@@ -156,6 +150,12 @@ const MarketplaceContractInfo = {
           internalType: 'uint256',
           name: 'tokenId',
           type: 'uint256',
+        },
+        {
+          indexed: false,
+          internalType: 'address',
+          name: 'payToken',
+          type: 'address',
         },
         {
           indexed: false,
@@ -215,15 +215,15 @@ const MarketplaceContractInfo = {
         },
         {
           indexed: false,
-          internalType: 'address',
-          name: 'payToken',
-          type: 'address',
-        },
-        {
-          indexed: false,
           internalType: 'uint256',
           name: 'quantity',
           type: 'uint256',
+        },
+        {
+          indexed: false,
+          internalType: 'address',
+          name: 'payToken',
+          type: 'address',
         },
         {
           indexed: false,
@@ -265,9 +265,9 @@ const MarketplaceContractInfo = {
       inputs: [
         {
           indexed: false,
-          internalType: 'uint256',
+          internalType: 'uint8',
           name: 'platformFee',
-          type: 'uint256',
+          type: 'uint8',
         },
       ],
       name: 'UpdatePlatformFee',
@@ -299,16 +299,13 @@ const MarketplaceContractInfo = {
     },
     {
       inputs: [],
-      name: 'artion',
-      outputs: [{ internalType: 'address', name: '', type: 'address' }],
-      stateMutability: 'view',
-      type: 'function',
-    },
-    {
-      inputs: [],
-      name: 'auction',
+      name: 'addressRegistry',
       outputs: [
-        { internalType: 'contract IFantomAuction', name: '', type: 'address' },
+        {
+          internalType: 'contract IFantomAddressRegistry',
+          name: '',
+          type: 'address',
+        },
       ],
       stateMutability: 'view',
       type: 'function',
@@ -322,6 +319,18 @@ const MarketplaceContractInfo = {
       name: 'buyItem',
       outputs: [],
       stateMutability: 'payable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'address', name: '_nftAddress', type: 'address' },
+        { internalType: 'uint256', name: '_tokenId', type: 'uint256' },
+        { internalType: 'address', name: '_payToken', type: 'address' },
+        { internalType: 'address', name: '_owner', type: 'address' },
+      ],
+      name: 'buyItem',
+      outputs: [],
+      stateMutability: 'nonpayable',
       type: 'function',
     },
     {
@@ -342,6 +351,17 @@ const MarketplaceContractInfo = {
       name: 'cancelOffer',
       outputs: [],
       stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [{ internalType: 'address', name: '', type: 'address' }],
+      name: 'collectionRoyalties',
+      outputs: [
+        { internalType: 'uint8', name: 'royalty', type: 'uint8' },
+        { internalType: 'address', name: 'creator', type: 'address' },
+        { internalType: 'address', name: 'feeRecipient', type: 'address' },
+      ],
+      stateMutability: 'view',
       type: 'function',
     },
     {
@@ -367,12 +387,26 @@ const MarketplaceContractInfo = {
     },
     {
       inputs: [
+        {
+          internalType: 'address payable',
+          name: '_feeRecipient',
+          type: 'address',
+        },
+        { internalType: 'uint8', name: '_platformFee', type: 'uint8' },
+      ],
+      name: 'initialize',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
         { internalType: 'address', name: '_nftAddress', type: 'address' },
         { internalType: 'uint256', name: '_tokenId', type: 'uint256' },
         { internalType: 'uint256', name: '_quantity', type: 'uint256' },
+        { internalType: 'address', name: '_payToken', type: 'address' },
         { internalType: 'uint256', name: '_pricePerItem', type: 'uint256' },
         { internalType: 'uint256', name: '_startingTime', type: 'uint256' },
-        { internalType: 'address', name: '_allowedAddress', type: 'address' },
       ],
       name: 'listItem',
       outputs: [],
@@ -388,28 +422,18 @@ const MarketplaceContractInfo = {
       name: 'listings',
       outputs: [
         { internalType: 'uint256', name: 'quantity', type: 'uint256' },
+        { internalType: 'address', name: 'payToken', type: 'address' },
         { internalType: 'uint256', name: 'pricePerItem', type: 'uint256' },
         { internalType: 'uint256', name: 'startingTime', type: 'uint256' },
-        { internalType: 'address', name: 'allowedAddress', type: 'address' },
       ],
       stateMutability: 'view',
       type: 'function',
     },
     {
-      inputs: [],
-      name: 'marketplace',
-      outputs: [
-        {
-          internalType: 'contract IFantomBundleMarketplace',
-          name: '',
-          type: 'address',
-        },
+      inputs: [
+        { internalType: 'address', name: '', type: 'address' },
+        { internalType: 'uint256', name: '', type: 'uint256' },
       ],
-      stateMutability: 'view',
-      type: 'function',
-    },
-    {
-      inputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
       name: 'minters',
       outputs: [{ internalType: 'address', name: '', type: 'address' }],
       stateMutability: 'view',
@@ -441,12 +465,25 @@ const MarketplaceContractInfo = {
     {
       inputs: [],
       name: 'platformFee',
-      outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      outputs: [{ internalType: 'uint8', name: '', type: 'uint8' }],
       stateMutability: 'view',
       type: 'function',
     },
     {
       inputs: [
+        { internalType: 'address', name: '_nftAddress', type: 'address' },
+        { internalType: 'address', name: '_creator', type: 'address' },
+        { internalType: 'uint8', name: '_royalty', type: 'uint8' },
+        { internalType: 'address', name: '_feeRecipient', type: 'address' },
+      ],
+      name: 'registerCollectionRoyalty',
+      outputs: [],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        { internalType: 'address', name: '_nftAddress', type: 'address' },
         { internalType: 'uint256', name: '_tokenId', type: 'uint256' },
         { internalType: 'uint8', name: '_royalty', type: 'uint8' },
       ],
@@ -463,7 +500,10 @@ const MarketplaceContractInfo = {
       type: 'function',
     },
     {
-      inputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+      inputs: [
+        { internalType: 'address', name: '', type: 'address' },
+        { internalType: 'uint256', name: '', type: 'uint256' },
+      ],
       name: 'royalties',
       outputs: [{ internalType: 'uint8', name: '', type: 'uint8' }],
       stateMutability: 'view',
@@ -477,24 +517,8 @@ const MarketplaceContractInfo = {
       type: 'function',
     },
     {
-      inputs: [{ internalType: 'address', name: '_artion', type: 'address' }],
-      name: 'updateArtion',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function',
-    },
-    {
-      inputs: [{ internalType: 'address', name: '_auction', type: 'address' }],
-      name: 'updateAuction',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function',
-    },
-    {
-      inputs: [
-        { internalType: 'address', name: '_marketplace', type: 'address' },
-      ],
-      name: 'updateBundleMarketplace',
+      inputs: [{ internalType: 'address', name: '_registry', type: 'address' }],
+      name: 'updateAddressRegistry',
       outputs: [],
       stateMutability: 'nonpayable',
       type: 'function',
@@ -503,6 +527,7 @@ const MarketplaceContractInfo = {
       inputs: [
         { internalType: 'address', name: '_nftAddress', type: 'address' },
         { internalType: 'uint256', name: '_tokenId', type: 'uint256' },
+        { internalType: 'address', name: '_payToken', type: 'address' },
         { internalType: 'uint256', name: '_newPrice', type: 'uint256' },
       ],
       name: 'updateListing',
@@ -511,9 +536,7 @@ const MarketplaceContractInfo = {
       type: 'function',
     },
     {
-      inputs: [
-        { internalType: 'uint256', name: '_platformFee', type: 'uint256' },
-      ],
+      inputs: [{ internalType: 'uint8', name: '_platformFee', type: 'uint8' }],
       name: 'updatePlatformFee',
       outputs: [],
       stateMutability: 'nonpayable',
@@ -528,17 +551,6 @@ const MarketplaceContractInfo = {
         },
       ],
       name: 'updatePlatformFeeRecipient',
-      outputs: [],
-      stateMutability: 'nonpayable',
-      type: 'function',
-    },
-    {
-      inputs: [
-        { internalType: 'address', name: '_nftAddress', type: 'address' },
-        { internalType: 'uint256', name: '_tokenId', type: 'uint256' },
-        { internalType: 'address', name: '_owner', type: 'address' },
-      ],
-      name: 'validateCancelListing',
       outputs: [],
       stateMutability: 'nonpayable',
       type: 'function',
