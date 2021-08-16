@@ -16,6 +16,8 @@ const loadMarketplaceContract = () => {
   return contract
 }
 
+const decimalStore = new Map()
+
 const marketplaceSC = loadMarketplaceContract()
 
 const apiEndPoint = process.env.API_ENDPOINT
@@ -24,8 +26,19 @@ const toLowerCase = (val) => {
   if (val) return val.toLowerCase()
   else return val
 }
-const parseToFTM = (inWei) => {
-  return parseFloat(inWei.toString()) / 10 ** 18
+const parseToken = async (inWei, paymentToken) => {
+  paymentToken = toLowerCase(paymentToken)
+  let tokenDecimals = decimalStore.get(paymentToken)
+  console.log(tokenDecimals)
+  if (tokenDecimals > 0)
+    return parseFloat(inWei.toString()) / 10 ** tokenDecimals
+  let decimals = await axios({
+    method: 'get',
+    url: process.env.DECIMAL_ENDPOINT + paymentToken,
+  })
+  decimals = parseInt(decimals.data.data)
+  decimalStore.set(paymentToken, decimals)
+  return parseFloat(inWei.toString()) / 10 ** decimals
 }
 const convertTime = (value) => {
   return parseFloat(value) * 1000
@@ -59,7 +72,7 @@ const trackMarketPlace = () => {
       tokenID = parseInt(tokenID)
       quantity = parseInt(quantity)
       paymentToken = toLowerCase(paymentToken)
-      pricePerItem = parseToFTM(pricePerItem)
+      pricePerItem = await parseToken(pricePerItem, paymentToken)
       startingTime = convertTime(startingTime)
       await callAPI('itemListed', {
         owner,
@@ -91,7 +104,7 @@ const trackMarketPlace = () => {
       nft = toLowerCase(nft)
       tokenID = parseInt(tokenID)
       quantity = parseInt(quantity)
-      price = parseToFTM(price)
+      price = await parseToken(price, paymentToken)
       paymentToken = toLowerCase(paymentToken)
       await callAPI('itemSold', {
         seller,
@@ -113,7 +126,7 @@ const trackMarketPlace = () => {
       owner = toLowerCase(owner)
       nft = toLowerCase(nft)
       tokenID = parseInt(tokenID)
-      price = parseToFTM(price)
+      price = await parseToken(price, paymentToken)
       paymentToken = toLowerCase(paymentToken)
       await callAPI('itemUpdated', { owner, nft, tokenID, paymentToken, price })
     },
@@ -144,7 +157,7 @@ const trackMarketPlace = () => {
       tokenID = parseInt(tokenID)
       quantity = parseInt(quantity)
       paymentToken = toLowerCase(paymentToken)
-      pricePerItem = parseToFTM(pricePerItem)
+      pricePerItem = await parseToken(pricePerItem, paymentToken)
       deadline = convertTime(deadline)
       await callAPI('offerCreated', {
         creator,
