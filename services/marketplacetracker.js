@@ -43,7 +43,7 @@ const callAPI = async (endpoint, data) => {
 
 const processMarketplaceEvents = async (startFromBlock) => {
   const currentBlock = await provider.getBlockNumber();
-  let lastBlockProcessed = currentBlock;
+  let lastBlockProcessed = startFromBlock;
 
   console.info(`Tracking block: ${startFromBlock} - ${currentBlock}`)
 
@@ -122,13 +122,35 @@ const processMarketplaceEvents = async (startFromBlock) => {
 
   try {
     const pastEvents = await marketplaceSc.queryFilter('*', startFromBlock, currentBlock);
-    await handleEvents(pastEvents);
+    const batches = pastEvents.reduce((batchArray, item, index) => {
+      const chunkIndex = Math.floor(index / 10)
 
-    if (!pastEvents.length) {
-      lastBlockProcessed = currentBlock;
-    }
+      if(!batchArray[chunkIndex]) {
+        batchArray[chunkIndex] = [] // start a new chunk
+      }
 
-    return TrackerState.updateOne({contractAddress: process.env.CONTRACTADDRESS}, {lastBlockProcessed})
+      batchArray[chunkIndex].push(item)
+
+      return batchArray
+    }, [])
+
+    batches.length && console.log(`Event batches to run ${batches.length}`);
+    let runBatch = 0;
+    await new Promise((resolve) => {
+      let interval = setInterval(async () => {
+        if (runBatch >= batches.length) {
+          clearInterval(interval);
+          return resolve()
+        }
+
+        await handleEvents(batches[runBatch]);
+        await TrackerState.updateOne({contractAddress: process.env.CONTRACTADDRESS}, {lastBlockProcessed});
+        console.log(`[PastEvents] Proccesed batch ${runBatch + 1} of ${batches.length}`);
+        console.log(`[PastEvents] LastBlockProcessed: ${lastBlockProcessed}`);
+
+        runBatch += 1;
+      }, 1000);
+    });
   } catch (err) {
     console.error(err.message);
   }
