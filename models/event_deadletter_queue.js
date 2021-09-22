@@ -20,6 +20,6 @@ const EVENT_DEAD_LETTER_QUEUE = mongoose.Schema(
     timestamps: true,
   },
 )
-EVENT_DEAD_LETTER_QUEUE.index({ transactionHash: 1 }, { unique: true })
+EVENT_DEAD_LETTER_QUEUE.index({ event: { transactionHash: 1 }}, { unique: true })
 
 module.exports = EVENT_DEAD_LETTER_QUEUE;
