@@ -31,7 +31,7 @@ const callAPI = async (endpoint, data) => {
     })
   } catch(err) {
     // If bad request save event-data to dead letter queue
-    if (err?.response?.status === 400) {
+    if (err && err.response && err.response.status === 400) {
       console.warn(`[bad-request] add event to dead-letter-queue, txHash: ${data.transactionHash}`);
       await EventDeadLetterQueue.create({contract: process.env.CONTRACTADDRESS, event: data})
       return;
@@ -75,17 +75,16 @@ const processMarketplaceEvents = async (startFromBlock) => {
       }
 
       // TODO: FIX event is not being send by contract with [buy item] method call and remove workaround
-      // if (event.event === "ItemSold") {
-      //   await handleItemSold(event);
-      //   console.log("SOLD ITEM");
-      //   break;
-      // }
+      if (event.event === "ItemSold") {
+        console.log(`[ItemSold] tx: ${event.transactionHash}, block: ${event.blockNumber}`)
+        await handleItemSold(event);
+      }
       // temp ItemSold event workaround
       if (!event.event) {
         const ItemSoldEvent = "0x949d1413";
-
-        if (event?.topics?.length && event.topics[0].slice(0, 10) === ItemSoldEvent) {
-          console.log(`[ItemSold] tx: ${event.transactionHash}, block: ${event.blockNumber}`)
+        console.log('[UNDEFINED EVENT][isItemSold?] method: ', event.topics[0].slice(0, 10), " : ",  ItemSoldEvent);
+        if (event.topics[0].slice(0, 10) === ItemSoldEvent) {
+          console.log(`[ItemSold][BACKUP] tx: ${event.transactionHash}, block: ${event.blockNumber}`)
 
           const decodedData = decoder.decode([ 'uint256', 'uint256', 'address', 'uint256', 'uint256' ], event.data);
           const seller = decoder.decode(["address"], event.topics[1])[0];
