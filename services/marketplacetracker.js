@@ -30,7 +30,7 @@ const callAPI = async (endpoint, data) => {
       data,
     })
   } catch(err) {
-    // If bad request save to dead letter queue
+    // If bad request save event-data to dead letter queue
     if (err?.response?.status === 400) {
       console.warn(`[bad-request] add event to dead-letter-queue, txHash: ${data.transactionHash}`);
       await EventDeadLetterQueue.create({contract: process.env.CONTRACTADDRESS, event: data})
@@ -59,7 +59,6 @@ const processMarketplaceEvents = async (startFromBlock) => {
   const handleItemCancelled = async (event) => {
     return callAPI('itemCanceled', event)
   }
-
   const handleOfferCreated = async (event) => {
     return callAPI('offerCreated', event)
   }
@@ -67,9 +66,7 @@ const processMarketplaceEvents = async (startFromBlock) => {
     return callAPI('offerCanceled', event)
   }
 
-
   async function handleEvents(events) {
-    let count = 0
     for (const event of events) {
       // Item lifecycle events
       if (event.event === "ItemListed") {
@@ -118,8 +115,6 @@ const processMarketplaceEvents = async (startFromBlock) => {
         console.log(`[OfferCanceled] tx: ${event.transactionHash}, block: ${event.blockNumber}`)
         await handleOfferCanceled(event)
       }
-
-
 
       lastBlockProcessed = event.blockNumber + 1;
     }

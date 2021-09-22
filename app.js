@@ -21,11 +21,11 @@ const connect = () => {
     if (!result.length) {
       await TrackerState.create({ contractAddress: process.env.CONTRACTADDRESS, lastBlockProcessed: 0 });
     }
-    // await processMarketplaceEvents(0);
+
     const trackContractCallback = async () => {
       const lastBlockRecord = await TrackerState.find({ contractAddress: process.env.CONTRACTADDRESS });
-      await processMarketplaceEvents(lastBlockRecord[0].lastBlockProcessed)
-      setTimeout(() => trackContractCallback(), 1000);
+      await processMarketplaceEvents(lastBlockRecord[0].lastBlockProcessed);
+      setTimeout(() => trackContractCallback(), 2000);
     }
     await trackContractCallback();
   })
